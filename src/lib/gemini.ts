@@ -118,3 +118,55 @@ JSON format එකෙන් return කරන්න.`;
     throw new Error(`Failed to generate valid quiz: ${error}`);
   }
 }
+
+/**
+ * Ask Sumith Sir's AI Teaching Assistant
+ */
+export async function askSumithSirAssistant(
+  userQuery: string,
+  chatHistory: { role: 'user' | 'model'; parts: string }[] = []
+): Promise<string> {
+  try {
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      systemInstruction: `ඔබ ශ්‍රී ලංකාවේ 5 ශ්‍රේණිය ශිෂ්‍යත්ව විභාගයට දරුවන් පුහුණු කරන "සුමිත් සර්ගේ" නිල AI ගුරු සහයකයා (Sumith Sir's AI Teaching Assistant) වේ.
+
+ඔබගේ කාර්යභාරය:
+1. 5 ශ්‍රේණියේ ශිෂ්‍යත්ව දරුවන්ට සහ දෙමාපියන්ට ගණිතය, පරිසරය, සිංහල, සාමාන්‍ය බුද්ධිය (IQ) ප්‍රශ්න සහ ගැටලු සරලව, පියවරෙන් පියවර පැහැදිලි කර දීම.
+2. ශිෂ්‍යත්ව විභාගයට බිය නැතිව සූදානම් වීමට දිරිගන්වන උපදෙස් සහ පාඩම් මතක තබාගැනීමේ ක්‍රම කියා දීම.
+3. සුමිත් සර්ගේ දෛනික ප්‍රශ්නාවලිය සහ ශිෂ්‍යත්ව සම්මන්ත්‍රණ පිළිබඳ තොරතුරු සුහදශීලීව ලබා දීම.
+
+භාෂා විලාසය:
+- වයස අවුරුදු 9-10 දරුවන්ට සහ දෙමාපියන්ට ගැලපෙන ඉතා ආදරණීය, කාරුණික, පැහැදිලි සහ දිරිගන්වනසුලු සිංහල බසින් පිළිතුරු දෙන්න.
+- කියවීමට පහසු වන සේ bullet points සහ සුදුසු emojis (🌟, 📚, 💡, 🎯, 👦, 👧) භාවිත කරන්න.`,
+    });
+
+    const chat = model.startChat({
+      history: chatHistory.map(h => ({
+        role: h.role,
+        parts: [{ text: h.parts }]
+      })),
+      generationConfig: {
+        maxOutputTokens: 1024,
+        temperature: 0.7,
+      }
+    });
+
+    const result = await chat.sendMessage(userQuery);
+    return result.response.text();
+  } catch (error) {
+    console.error("Gemini AI Assistant error:", error);
+    
+    // Smart fallback responses
+    const queryLower = userQuery.toLowerCase();
+    if (queryLower.includes("සුමිත්") || queryLower.includes("sumith") || queryLower.includes("පන්ති") || queryLower.includes("class")) {
+      return "👨‍🏫 **සුමිත් සර්ගේ ශිෂ්‍යත්ව පන්තිය පිළිබඳ තොරතුරු:**\n\nසුමිත් සර් වසර ගණනාවක් පුරා 5 ශ්‍රේණියේ දරුවන් ශිෂ්‍යත්ව විභාගයේ විශිෂ්ට ජයග්‍රහණ කරා මෙහෙයවන ප්‍රවීණ ගුරුවරයෙකි.\n\n✨ **විශේෂත්වයන්:**\n• දිනපතා නවීන AI තාක්ෂණයෙන් සැකසූ ප්‍රශ්නාවලි\n• සියලු විෂය නිර්දේශ ආවරණය වන සම්මන්ත්‍රණ\n• ප්‍රශ්න පත්‍ර සාකච්ඡා සහ පුද්ගලික අවධානය\n\nවැඩිදුර තොරතුරු සඳහා ඔබේ ප්‍රශ්නය මෙහි යොමු කරන්න! 😊";
+    }
+
+    if (queryLower.includes("ගණිත") || queryLower.includes("math")) {
+      return "➕ **ගණිත ගැටලු විසඳීමට සුමිත් සර්ගේ විශේෂ උපදෙස්:**\n\n1. 📖 **ප්‍රශ්නය හොඳින් කියවන්න:** දී ඇති දත්ත සහ අසන දේ පැහැදිලිව තේරුම් ගන්න.\n2. ✏️ **කෙටි සටහනක් හෝ රූපයක් අඳින්න:** රටා, දිග පළල, මුදල් ගැටලු වලට මෙය ඉතා උපකාරී වේ.\n3. ⏱️ **කාල කළමනාකරණය:** එක් ප්‍රශ්නයකට ඕනෑවට වඩා වෙලා නොගෙන පහසු ගැටලු මුලින්ම විසඳන්න.\n\nඔබට විසඳාගත යුතු විශේෂ ගණිත ගැටලුවක් ඇත්නම් එය මෙහි ලියා එවන්න! 💡";
+    }
+
+    return "ආයුබෝවන් දුවේ/පුතේ! 🌟 මම සුමිත් සර්ගේ AI ගුරු සහයකයා.\n\n5 ශ්‍රේණියේ ශිෂ්‍යත්ව විභාගයේ පරිසරය, සිංහල, ගණිතය, සාමාන්‍ය බුද්ධිය හෝ විභාග උපදෙස් පිළිබඳ ඕනෑම දෙයක් මාගෙන් විමසන්න. මම ඔබට සතුටින් උදව් කරන්නම්! 📚✨";
+  }
+}

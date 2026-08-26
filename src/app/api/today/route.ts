@@ -27,17 +27,26 @@ export async function GET() {
     }
 
     if (!quizData) {
-      return NextResponse.json(
-        {
-          available: false,
-          date: today,
-          subject: todayTopic.subject,
-          topic: todayTopic.topic,
-          subjectEmoji: todayTopic.subjectEmoji,
-          message: "අද දවසේ ප්‍රශ්නාවලිය තවම සකස් කර නැත. ටික වේලාවකින් නැවත උත්සාහ කරන්න.",
-        },
-        { status: 404 }
-      );
+      // Auto-generate on the fly if not in sheets yet!
+      try {
+        const { generateQuiz } = await import("../../../lib/gemini");
+        const { getPastPaperSamples } = await import("../../../lib/past-paper-bank");
+        const { saveQuizData, logDailyQuiz } = await import("../../../lib/google-sheets");
+
+        const samples = getPastPaperSamples(todayTopic.subject, todayTopic.topic);
+        quizData = await generateQuiz(todayTopic.subject, todayTopic.topic, samples);
+
+        // Try to cache in sheets in background
+        if (quizData) {
+          const quizJson = JSON.stringify(quizData);
+          saveQuizData(today, quizJson).catch(console.error);
+          logDailyQuiz(today, todayTopic.subject, todayTopic.topic, today, "").catch(console.error);
+        }
+      } catch (genError) {
+        console.error("Auto-generate failed, using default quiz bank:", genError);
+        const { getDefaultQuiz } = await import("../../../lib/default-quizzes");
+        quizData = getDefaultQuiz(todayTopic.subject);
+      }
     }
 
     // Return quiz data WITHOUT correct answers (for security)
@@ -45,7 +54,6 @@ export async function GET() {
       id: q.id,
       question: q.question,
       options: q.options,
-      // Do NOT include correctAnswer or explanation here
     }));
 
     return NextResponse.json({

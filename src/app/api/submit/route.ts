@@ -33,15 +33,20 @@ export async function POST(request: Request) {
     const today = dateOverride || new Date().toISOString().split("T")[0];
 
     // Load quiz data with correct answers
-    const quizJson = await loadQuizData(today);
-    if (!quizJson) {
-      return NextResponse.json(
-        { error: "No quiz found for today" },
-        { status: 404 }
-      );
+    let quizData: QuizData | null = null;
+    try {
+      const quizJson = await loadQuizData(today);
+      if (quizJson) {
+        quizData = JSON.parse(quizJson);
+      }
+    } catch (e) {
+      console.error("Failed to load quiz from sheets for grading:", e);
     }
 
-    const quizData: QuizData = JSON.parse(quizJson);
+    if (!quizData) {
+      const { getDefaultQuiz } = await import("../../../lib/default-quizzes");
+      quizData = getDefaultQuiz();
+    }
 
     // Grade the answers
     let score = 0;

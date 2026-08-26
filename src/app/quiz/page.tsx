@@ -28,7 +28,6 @@ function QuizContent() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
-  const [answerFeedback, setAnswerFeedback] = useState<{isCorrect: boolean, correctAnswer: number, explanation: string} | null>(null)
   const [answers, setAnswers] = useState<number[]>([])
   const [submitting, setSubmitting] = useState(false)
 
@@ -53,10 +52,11 @@ function QuizContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4 animate-bounce">📝</div>
-          <p className="text-2xl font-bold text-blue-600">ප්‍රශ්න සකසමින්... ⏳</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="text-center p-8 bg-white/90 rounded-3xl shadow-xl border border-blue-100">
+          <div className="text-5xl mb-4 animate-bounce">📝</div>
+          <p className="text-2xl font-black text-blue-700">ප්‍රශ්න පූරණය වෙමින් පවතී...</p>
+          <p className="text-sm font-semibold text-gray-500 mt-2">සුළු මොහොතක් රැඳී සිටින්න ⏳</p>
         </div>
       </div>
     )
@@ -64,16 +64,16 @@ function QuizContent() {
 
   if (!quizData || !quizData.questions || quizData.questions.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="text-center rounded-2xl bg-white p-8 shadow-xl">
-          <div className="text-5xl mb-4">😔</div>
-          <p className="text-xl font-bold text-gray-700 mb-4">අද දිනට ප්‍රශ්නාවලියක් තවම සකස් කර නැත</p>
-          <p className="text-gray-500 mb-6">ටික වේලාවකින් නැවත උත්සාහ කරන්න</p>
+      <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center rounded-3xl bg-white p-8 shadow-xl max-w-md w-full border border-blue-100">
+          <div className="text-6xl mb-4">📚</div>
+          <p className="text-2xl font-black text-gray-800 mb-2">ප්‍රශ්න සූදානම් කරමින්</p>
+          <p className="text-gray-600 mb-6 font-medium">අද දින ප්‍රශ්නාවලිය ආරම්භ කිරීමට සූදානම් වන්න</p>
           <button
             onClick={() => router.push('/')}
-            className="rounded-full bg-blue-500 px-6 py-3 text-white font-bold"
+            className="w-full rounded-2xl bg-blue-600 px-6 py-4 text-white font-extrabold text-lg shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
           >
-            ආපසු යන්න
+            මුල් පිටුවට යන්න 🏠
           </button>
         </div>
       </div>
@@ -82,22 +82,14 @@ function QuizContent() {
 
   const question = quizData.questions[currentQuestion]
   const isLastQuestion = currentQuestion === quizData.questions.length - 1
-  const optionLabels = ['අ', 'ආ', 'ඇ']
+  const optionLabels = ['(1)', '(2)', '(3)']
 
-  const handleOptionClick = async (index: number) => {
+  const handleOptionClick = (index: number) => {
     if (showResult) return
     setSelectedAnswer(index)
     setShowResult(true)
-
-    // Store the answer
     const newAnswers = [...answers, index]
     setAnswers(newAnswers)
-
-    // For intermediate questions, we show a "pending" state
-    // The actual grading happens server-side on final submit
-    // For now, just show visual feedback without revealing correctness
-    // (correct answers are not sent from /api/today for security)
-    setAnswerFeedback(null) // Will be revealed after submit
   }
 
   const handleNext = async () => {
@@ -114,7 +106,6 @@ function QuizContent() {
           const data = await res.json()
           sessionStorage.setItem('quizResults', JSON.stringify(data))
         } else {
-          // Fallback: store basic info
           sessionStorage.setItem('quizResults', JSON.stringify({
             studentName,
             score: 0,
@@ -138,54 +129,66 @@ function QuizContent() {
       setCurrentQuestion(prev => prev + 1)
       setSelectedAnswer(null)
       setShowResult(false)
-      setAnswerFeedback(null)
     }
   }
 
   return (
-    <main className="flex min-h-screen flex-col p-4 max-w-lg mx-auto">
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">👦</span>
-          <span className="font-bold text-blue-800 text-sm">{studentName}</span>
+    <main className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 py-6 px-4 flex flex-col justify-between max-w-lg mx-auto">
+      
+      {/* Top Header Card */}
+      <div className="bg-white/90 backdrop-blur rounded-2xl p-4 shadow-md border border-white mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl p-1.5 bg-blue-100 rounded-xl">👦</span>
+            <div>
+              <p className="text-xs font-bold text-gray-500">ශිෂ්‍යයාගේ නම</p>
+              <p className="font-black text-blue-950 text-base">{studentName}</p>
+            </div>
+          </div>
+          <div className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm shadow">
+            ප්‍රශ්නය {currentQuestion + 1} / {quizData.questions.length}
+          </div>
         </div>
-        <div className="rounded-full bg-blue-100 px-4 py-2 font-bold text-blue-800 text-sm">
-          {currentQuestion + 1}/{quizData.questions.length}
+
+        {/* Progress Bar */}
+        <div className="h-3.5 w-full rounded-full bg-blue-100 overflow-hidden p-0.5 border border-blue-200">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 transition-all duration-500"
+            style={{ width: `${((currentQuestion + (showResult ? 1 : 0)) / quizData.questions.length) * 100}%` }}
+          />
+        </div>
+
+        {/* Subject Pill */}
+        <div className="mt-3 text-center">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-800 text-xs font-extrabold border border-indigo-100">
+            <span>{quizData.subjectEmoji || '📚'}</span>
+            <span>{quizData.subject} • {quizData.topic}</span>
+          </span>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="mb-6 h-3 w-full rounded-full bg-gray-200 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
-          style={{ width: `${((currentQuestion + (showResult ? 1 : 0)) / quizData.questions.length) * 100}%`, transition: 'width 0.5s ease' }}
-        />
-      </div>
+      {/* Question Card */}
+      <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-xl border-4 border-blue-100 flex-1 flex flex-col justify-between my-2">
+        <div>
+          {/* Question Number Badge */}
+          <div className="inline-block px-3 py-1 rounded-lg bg-blue-50 text-blue-800 text-xs font-black mb-3">
+            ප්‍රශ්න අංක 0{currentQuestion + 1}
+          </div>
 
-      {/* Subject Info */}
-      <div className="mb-4 text-center">
-        <span className="rounded-full bg-purple-100 px-4 py-1 text-sm font-bold text-purple-700">
-          {quizData.subjectEmoji} {quizData.subject} — {quizData.topic}
-        </span>
-      </div>
-
-      {/* Question */}
-      <div className="flex-1">
-        <div className="animate-slide-up">
-          <h2 className="mb-8 text-xl font-extrabold text-gray-800 leading-relaxed text-center">
+          {/* Question Title */}
+          <h2 className="mb-6 text-xl sm:text-2xl font-black text-gray-900 leading-snug">
             {question.question}
           </h2>
 
           {/* Options */}
           <div className="flex flex-col gap-3">
             {question.options.map((opt, idx) => {
-              let btnClass = 'bg-white border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-gray-800'
-              let icon = optionLabels[idx]
+              let btnClass = 'bg-gray-50 border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 text-gray-800'
+              let iconClass = 'bg-gray-200 text-gray-700'
 
               if (showResult && selectedAnswer === idx) {
-                btnClass = 'bg-blue-100 border-2 border-blue-500 text-blue-900 font-bold'
-                icon = '✓'
+                btnClass = 'bg-blue-100 border-2 border-blue-600 text-blue-950 font-black shadow-md ring-2 ring-blue-300'
+                iconClass = 'bg-blue-600 text-white'
               }
 
               return (
@@ -193,37 +196,49 @@ function QuizContent() {
                   key={idx}
                   onClick={() => handleOptionClick(idx)}
                   disabled={showResult}
-                  className={`flex items-center gap-3 rounded-xl p-4 text-left text-lg w-full min-h-[56px] ${btnClass} disabled:cursor-default`}
+                  className={`flex items-center gap-3.5 rounded-2xl p-4 text-left text-lg w-full min-h-[60px] ${btnClass} transition-all active:scale-[0.98] disabled:cursor-default`}
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-sm">
-                    {icon}
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-black text-sm transition-all ${iconClass}`}>
+                    {optionLabels[idx]}
                   </span>
-                  <span className="leading-relaxed">{opt}</span>
+                  <span className="leading-relaxed font-bold flex-1">{opt}</span>
                 </button>
               )
             })}
           </div>
 
-          {/* Info after selecting */}
+          {/* Answer Recorded Feedback */}
           {showResult && (
-            <div className="mt-6 rounded-xl bg-amber-50 p-4 border-2 border-amber-200 animate-slide-up">
-              <p className="font-bold text-amber-800 mb-1">💡 ඔබේ පිළිතුර වාර්තා විය!</p>
-              <p className="text-amber-700 text-sm">ප්‍රතිඵල සියල්ල අවසානයේ පෙනෙනු ඇත.</p>
+            <div className="mt-5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 p-4 border-2 border-emerald-200 animate-slide-up flex items-center gap-3">
+              <span className="text-3xl">✨</span>
+              <div>
+                <p className="font-black text-emerald-900 text-sm">ඔබේ පිළිතුර සාර්ථකව සටහන් විය!</p>
+                <p className="text-emerald-700 text-xs font-semibold">අවසානයේ සියලු නිවැරදි පිළිතුරු විවරණ බලාගත හැක.</p>
+              </div>
             </div>
           )}
         </div>
+
+        {/* Next / Finish Button */}
+        {showResult && (
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <button
+              onClick={handleNext}
+              disabled={submitting}
+              className="w-full rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-6 py-4 text-xl font-black text-white shadow-xl shadow-blue-500/20 active:scale-95 disabled:opacity-50 min-h-[56px] transition-all flex items-center justify-center gap-2"
+            >
+              <span>{submitting ? '⏳ ලකුණු සටහන් කරමින්...' : isLastQuestion ? '🏆 ප්‍රතිඵල බලමු!' : 'ඊළඟ ප්‍රශ්නය'}</span>
+              {!submitting && <span>{isLastQuestion ? '🎉' : '→'}</span>}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Next Button */}
-      {showResult && (
-        <button
-          onClick={handleNext}
-          disabled={submitting}
-          className="mt-8 w-full rounded-full bg-gradient-to-r from-blue-500 to-blue-700 px-6 py-4 text-xl font-bold text-white shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 min-h-[56px] animate-slide-up"
-        >
-          {submitting ? '⏳ ලකුණු ගණනය කරමින්...' : isLastQuestion ? '🏆 ප්‍රතිඵල බලමු!' : 'ඊළඟ ප්‍රශ්නය →'}
-        </button>
-      )}
+      {/* Encouragement Footer */}
+      <div className="text-center text-xs font-bold text-gray-500 mt-2">
+        🎯 5 ශ්‍රේණිය ශිෂ්‍යත්ව ප්‍රශ්නාවලිය • සුමිත් සර්
+      </div>
+
     </main>
   )
 }
@@ -231,8 +246,8 @@ function QuizContent() {
 export default function QuizPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-xl text-blue-600 font-bold">📝 පූරණය වෙමින්...</p>
+      <div className="flex min-h-screen items-center justify-center bg-blue-50">
+        <p className="text-xl text-blue-700 font-black">📝 පූරණය වෙමින්...</p>
       </div>
     }>
       <QuizContent />

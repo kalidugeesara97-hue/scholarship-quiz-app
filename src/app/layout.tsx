@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Sinhala } from "next/font/google";
 import "./globals.css";
+import AiAssistant from "./components/AiAssistant";
 
 const sinhalaFont = Noto_Sans_Sinhala({
   subsets: ["sinhala", "latin"],
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="si" className={sinhalaFont.variable}>
       <body className="font-sans min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         {children}
+        <AiAssistant />
       </body>
     </html>
   );
